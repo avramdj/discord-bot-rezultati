@@ -1,2 +1,3 @@
 # Rezultati-Discord-Bot
-rezultati discord bot
+
+(stara public vezija)
