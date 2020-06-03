@@ -36,6 +36,10 @@ async def prati(ctx, *args):
         await ctx.send(messages.invalid_url)
         return
 
+    if not is_static_url(url):
+        await ctx.send(messages.not_static)
+        return
+
     data = get_data(url)
     query = db_urls.find_one({'url' : url})
 
@@ -45,17 +49,21 @@ async def prati(ctx, *args):
                 await ctx.send(f'{ctx.author.mention} {messages.already_following}')
                 return
 
-    if query is not None:
-        db_urls.update_one({'url' : url}, {'$push' : { 'ctx' : CtxEntry(ctx).__dict__}})
-    else:
-        db_urls.insert_one(DbEntry(ctx, url, data).__dict__)
+    try:
+        if query is not None:
+            db_urls.update_one({'url' : url}, {'$push' : { 'ctx' : CtxEntry(ctx).__dict__}})
+        else:
+            db_urls.insert_one(DbEntry_URL(ctx, url, data).__dict__)
 
-    query = db_users.find_one({'user' : ctx.author.mention})
+        query = db_users.find_one({'id' : ctx.author.id})
 
-    if query is not None:
-        db_users.update_one({'user' : ctx.author.mention}, {'$push' : { 'urls' : url}})
-    else:
-        db_users.insert_one({'user' : ctx.author.mention, 'urls' : [url]})
+        if query is not None:
+            db_users.update_one({'id' : ctx.author.id}, {'$push' : { 'urls' : url}})
+        else:
+            db_users.insert_one(DbEntry_USER(ctx, url).__dict__)
+    except Exception:
+        await ctx.send(f'{messages.db_error}')
+        return
 
     await ctx.send(f'{ctx.author.mention} {messages.success_follow}')
 
@@ -71,7 +79,11 @@ async def otprati(ctx, *args):
                 'author' : str(ctx.author)
             }
         }}) 
-        db_users.update_one({"user": str(ctx.author.mention)}, {'$set' : {'urls' : []}})
+        try:
+            db_users.update_one({'id' : ctx.author.id} , {'$set' : {'urls' : []}})
+        except:
+            await ctx.send(f'{messages.db_error}')
+            return
         await ctx.send(f'{ctx.author.mention} {messages.success_unfollow}')
         return
     else:
@@ -81,12 +93,21 @@ async def otprati(ctx, *args):
                 'author' : str(ctx.author)
             }
         }})
-        db_users.update_one({"user": str(ctx.author.mention)}, {'$pull' : { 'urls' : url }})
+        try:
+            db_urls.update_one({"url": url}, {'$pull' : {
+                'ctx' : {
+                    'author' : str(ctx.author)
+                }
+            }})
+            db_users.update_one({'id' : ctx.author.id}, {'$pull' : { 'urls' : url }})
+        except:
+            await ctx.send(f'{messages.db_error}')
+
         await ctx.send(f'{ctx.author.mention} {messages.success_unfollow}')
 
 @client.command(name='strane')
 async def strane(ctx, *args):
-    user_entry = db_users.find_one({'user' : str(ctx.author.mention)})
+    user_entry = db_users.find_one({'id' : ctx.author.id})
     message = str(ctx.author.mention) + " "
     if user_entry is None or len(user_entry['urls']) == 0:
         await ctx.send(f'{str(ctx.author.mention)} {messages.following_zero}')
@@ -94,6 +115,19 @@ async def strane(ctx, *args):
     for url in user_entry['urls']:
         message += "<" + url + ">" + "\n"
     await ctx.send(message)
+
+@client.command(name='sve')
+async def sve(ctx, *args):
+    urls = db_urls.find({})
+    message = "Sve strane u bazi:\n"
+    exists = False
+    for url in urls:
+        message += "<" + url['url'] + ">" + "\n"
+        exists = True
+    if not exists:
+        await ctx.send(f'{str(ctx.author.mention)} {messages.no_pages}')
+    else:
+        await ctx.send(message)
 
 @client.command(name='help')
 async def _help(ctx):
@@ -116,13 +150,22 @@ async def watch():
             new_checksum = crc32(get_data(url['url']))
             message = ""
             if url['checksum'] != new_checksum:
+                has_followers = False
                 for ctx in url['ctx']:
-                    message += ctx['mention'] + " "
-                message += "Strana se promenila !!! "
-                message += url['url']
-                await client.get_channel(int(ctx['channel'])).send(message)
+                    await client.get_user(int(ctx['id'])).send(messages.page_changed + '\n' + url['url'])
                 db_urls.update_one({"url" : url['url']}, {'$set' : {"checksum" : new_checksum}})
         await sleep(config.sleep_duration)
 
+async def prune_db():
+    await client.wait_until_ready()
+    print("Cleaning db")
+    while not client.is_closed():
+        db_urls.delete_many({'ctx' : {
+            '$exists' : 'true',
+            '$size' : 0
+        }})
+        await sleep(config.prune_period)
+
 client.loop.create_task(watch())
+client.loop.create_task(prune_db())
 client.run(config.token)
