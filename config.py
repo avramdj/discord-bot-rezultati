@@ -1,10 +1,12 @@
 import urllib.parse
 
 token = 'TOKEN'
-username = urllib.parse.quote_plus('USERNAME')
-password = urllib.parse.quote_plus('PASSWORD')
+username = urllib.parse.quote_plus('DBUSERNAME')
+password = urllib.parse.quote_plus('DBPASSWORD')
 
-dbURI = "DB_URI"
-dbNAME = 'DB_NAME'
-sleep_duration = 3*60 #seconds
+dbURI = "DBURI"
+dbNAME = 'DBNAME'
+sleep_duration = 5*60 #seconds
 prune_period = 30*60 #seconds
+page_size_max = 1000000 #bytes
+log_channel = 717840269654884462
