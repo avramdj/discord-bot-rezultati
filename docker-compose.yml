@@ -1,0 +1,23 @@
+version: "3.9"
+services:
+  bot:
+    build:
+      context: ./bot
+      dockerfile: .docker/Dockerfile    
+    container_name: bot 
+    environment:
+      - DB_URI=mongodb://db:27017/rezultati?retryWrites=false
+      - DB_NAME=rezultati
+      - DISCORD_TOKEN=$DISCORD_TOKEN
+      - LOG_CHANNEL_ID=$LOG_CHANNEL_ID
+      - SECRET_SERVER=$SECRET_SERVER
+    restart: unless-stopped
+  mongo:
+    image: mongo
+    container_name: db 
+    volumes:
+      - /docker_volumes/rezultati_mongo/db:/data/db
+      - /docker_volumes/rezultati_mongo/configdb:/data/configdb
+    ports:
+      - 27017:27017
+    restart: unless-stopped
