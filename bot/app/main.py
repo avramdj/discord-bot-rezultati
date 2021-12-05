@@ -9,7 +9,7 @@ import messages
 import sys
 import os
 
-intents = discord.Intents.default()
+intents = discord.Intents.all()
 client = commands.Bot(command_prefix=("sudo ", "Sudo "), intents=intents)
 mongo_client = pymongo.MongoClient(config.db_uri)
 db = mongo_client[config.db_name]

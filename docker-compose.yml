@@ -11,6 +11,9 @@ services:
       - DISCORD_TOKEN=$DISCORD_TOKEN
       - LOG_CHANNEL_ID=$LOG_CHANNEL_ID
       - SECRET_SERVER=$SECRET_SERVER
+      - SLEEP_DURATION_MIN=1
+      - PRUNE_PERIOD_MIN=5
+      - MAX_PAGE_SIZE=1000000
     restart: unless-stopped
   mongo:
     image: mongo
