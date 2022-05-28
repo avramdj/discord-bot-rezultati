@@ -3,6 +3,10 @@ import time
 
 import config
 import requests
+import requests_html
+
+
+s = requests_html.AsyncHTMLSession()
 
 
 class DbEntry_URL:
@@ -57,6 +61,7 @@ def is_valid_url(url):
 
 
 def is_static_url(url):
+    return True
     try:
         sum1 = crc32(get_data(url))
         sum2 = crc32(get_data(url))
@@ -75,11 +80,13 @@ def page_size(url):
         return 0
 
 
-def get_data(url):
-    data = requests.get(url)
-    data.encoding = "utf-8"
-    data = data.text.strip()
-    return data
+async def get_data(url):
+    print("HELLO")
+    data = await s.get(url)
+    print("WORLD")
+    await data.html.arender()
+    print("AYYYYYYYYYYYYY")
+    return data.html.html
 
 
 def get_url(url):
@@ -89,4 +96,4 @@ def get_url(url):
 
 
 def crc32(data):
-    return int(binascii.crc32(data.encode("utf8")))
+    return int(binascii.crc32(str(data).encode("utf8")))

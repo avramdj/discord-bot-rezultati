@@ -59,7 +59,7 @@ async def prati(ctx, *args):
         return
 
     try:
-        data = get_data(url)
+        data = await get_data(url)
     except Exception as e:
         await ctx.send(f"{messages.request_error}" + "\n" + str(e))
         return False
@@ -280,7 +280,7 @@ async def watch():
         urls = db_urls.find()
         for url in urls:
             try:
-                new_checksum = crc32(get_data(url["url"]))
+                new_checksum = crc32(await get_data(url["url"]))
             except Exception as e:
                 await log(
                     "Greska prilikom updatovanja strane " + url["url"] + "\n" + str(e)
