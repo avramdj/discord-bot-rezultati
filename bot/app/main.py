@@ -20,7 +20,7 @@ db_store = db["store"]
 channels = []
 client.remove_command("help")
 watch_timer = WatchTimer()
-secret_channel = os.environ["SECRET_SERVER"]
+secret_channel = int(os.environ["SECRET_SERVER"])
 
 
 @client.event
