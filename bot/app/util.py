@@ -81,11 +81,8 @@ def page_size(url):
 
 
 async def get_data(url):
-    print("HELLO")
     data = await s.get(url)
-    print("WORLD")
     await data.html.arender()
-    print("AYYYYYYYYYYYYY")
     return data.html.html
 
 
