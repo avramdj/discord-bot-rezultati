@@ -11,16 +11,20 @@ services:
       - DISCORD_TOKEN=$DISCORD_TOKEN
       - LOG_CHANNEL_ID=$LOG_CHANNEL_ID
       - SECRET_SERVER=$SECRET_SERVER
-      - SLEEP_DURATION_MIN=1
-      - PRUNE_PERIOD_MIN=5
+      - SLEEP_DURATION_MIN=5
+      - PRUNE_PERIOD_MIN=10
       - MAX_PAGE_SIZE=1000000
     restart: unless-stopped
   mongo:
     image: mongo
     container_name: db 
     volumes:
-      - /docker_volumes/rezultati_mongo/db:/data/db
-      - /docker_volumes/rezultati_mongo/configdb:/data/configdb
+      - mongodata:/data/db
+      - mongoconfig:/data/configdb
     ports:
       - 27017:27017
     restart: unless-stopped
+
+volumes:
+  mongodata:
+  mongoconfig:
